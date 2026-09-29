@@ -160,6 +160,18 @@ ol.flow li.on b{color:var(--ink)}
 .chips span.on{color:var(--ink); font-weight:600}
 .chips span.on::before{background:var(--lamp); box-shadow:0 0 0 3px rgba(255,176,32,.25)}
 .tl{display:none}
+#helpp{position:absolute; inset:0; z-index:8; display:grid; place-items:center; background:rgba(20,26,30,.35); padding:16px}
+#helpp[hidden]{display:none}
+.hcard{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-l); box-shadow:0 20px 50px rgba(0,0,0,.3); width:min(820px, 100%); max-height:100%; overflow:auto; padding:16px 20px 20px}
+.hhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px}
+.hhead h2{font:700 22px "Barlow Condensed",sans-serif; margin:0}
+.hcols{display:grid; grid-template-columns:1fr 1fr 1.15fr; gap:24px}
+.hcols h3{font:600 14px "Barlow",sans-serif; color:var(--slate); margin:6px 0 8px}
+.hcols dl{margin:0; display:grid; grid-template-columns:minmax(96px, max-content) 1fr; gap:7px 12px; font-size:13.5px; align-items:baseline}
+.hcols dt{font-weight:600} .hcols dd{margin:0; color:var(--slate); min-width:110px}
+kbd{display:inline-block; min-width:22px; padding:1px 6px; border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; background:var(--panel2); font:600 12px "Barlow",sans-serif; text-align:center; color:var(--ink)}
+@media (pointer:coarse){ .hmouse, .hkeys{display:none} .hcols{grid-template-columns:1fr} }
+@media (pointer:fine) and (max-width:820px){ .hcols{grid-template-columns:1fr 1fr} .htouch{display:none} }
 .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 .note{color:var(--slate); font-size:12.5px; line-height:1.5; margin-top:18px}
 aside h2 + .spouts{margin-top:10px}
@@ -234,6 +246,7 @@ body.fsmode #wlegend{top:12px}
   #wlegend{top:10px; left:10px; right:auto; font-size:11px}
   #coach{bottom:60px}
 }
+@media (max-width:1560px) and (min-width:821px){ #tools .btn:not(#tour):not(#voice) .lbl{display:none} #tools .btn:not(#tour):not(#voice){width:38px; padding:0} }
 @media (max-width:1100px) and (min-width:821px){ #views .btn{padding:0 9px; font-size:13px} #tools .lbl-o{display:none} }
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
 </style>
@@ -249,15 +262,17 @@ body.fsmode #wlegend{top:12px}
   <div id="qa">
     <p class="qal">Controls</p>
     <div id="tools" role="toolbar" aria-label="Animation controls" aria-describedby="kbd">
-      <button class="btn" id="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pa f" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/><path class="i-pl f" d="M8 5.5v13l10.5-6.5z"/></svg><span class="lbl">Pause</span></button>
-      <button class="btn" id="spd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></svg><span class="lbl">Speed 1×</span></button>
+      <button class="btn" id="play" title="Play or pause (Space)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pa f" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/><path class="i-pl f" d="M8 5.5v13l10.5-6.5z"/></svg><span class="lbl">Pause</span></button>
+      <button class="btn" id="spd" title="Animation speed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></svg><span class="lbl">Speed 1×</span></button>
       <span class="sep" aria-hidden="true"></span>
-      <button class="btn" id="tour" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c3-1 3-5 7-6s5-4 7-7"/><circle cx="5" cy="19" r="1.6"/><circle cx="19" cy="6" r="1.6"/></svg><span class="lbl">Guided tour</span></button>
-      <button class="btn" id="voice" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11"/></svg><span class="lbl">Voice: female</span></button>
+      <button class="btn" id="tour" aria-pressed="false" title="Guided tour (T)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c3-1 3-5 7-6s5-4 7-7"/><circle cx="5" cy="19" r="1.6"/><circle cx="19" cy="6" r="1.6"/></svg><span class="lbl">Guided tour</span></button>
+      <button class="btn" id="voice" aria-pressed="true" title="Narrator voice"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11"/></svg><span class="lbl">Voice: female</span></button>
       <span class="sep" aria-hidden="true"></span>
-      <button class="btn" id="cut" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M12 4v16" stroke-dasharray="2 2.5"/></svg><span class="lbl">Cutaway</span></button>
-      <button class="btn" id="lbl" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5h16v3M12 5v14M9 19h6"/></svg><span class="lbl">Labels</span></button>
-      <button class="btn" id="wire" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L6 13h5l-1 8 7-10h-5z"/></svg><span class="lbl">Wiring</span></button>
+      <button class="btn" id="cut" aria-pressed="true" title="Cutaway (X)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M12 4v16" stroke-dasharray="2 2.5"/></svg><span class="lbl">Cutaway</span></button>
+      <button class="btn" id="lbl" aria-pressed="false" title="Labels (L)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5h16v3M12 5v14M9 19h6"/></svg><span class="lbl">Labels</span></button>
+      <button class="btn" id="wire" aria-pressed="false" title="Wiring (W)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L6 13h5l-1 8 7-10h-5z"/></svg><span class="lbl">Wiring</span></button>
+      <span class="sep" aria-hidden="true"></span>
+      <button class="btn" id="help" aria-expanded="false" aria-controls="helpp" title="Controls and shortcuts (?)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg><span class="lbl">Shortcuts</span></button>
     </div>
     <p class="qal">Camera views</p>
     <div id="views" role="group" aria-label="Camera views">
@@ -272,9 +287,24 @@ body.fsmode #wlegend{top:12px}
   </div>
   <button class="cue" id="cue" type="button">Path of the limestone <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
   <button class="btn ibtn fsbtn" id="fs" aria-pressed="false" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="open" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path class="close" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
-  <div id="coach">Drag to turn, pinch or scroll to zoom, tap a part for details</div>
+  <div id="coach">Drag to turn, two fingers or right-drag to pan, tap a part for details. Press ? for shortcuts</div>
   <p id="kbd" class="sr">Keyboard: Space play or pause, T guided tour, C captions, F full screen, W wiring, X cutaway, L labels, 1 to 7 camera views, arrow keys turn the model.</p>
   <div id="tip" hidden role="tooltip"></div>
+  <div id="helpp" hidden role="dialog" aria-modal="false" aria-labelledby="helpt">
+    <div class="hcard">
+      <div class="hhead"><h2 id="helpt">Controls and shortcuts</h2><button class="btn ibtn" id="helpx" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="hcols">
+        <section class="hmouse"><h3>Mouse</h3><dl>
+          <dt>Drag</dt><dd>Turn the model</dd><dt>Right-drag or Shift-drag</dt><dd>Pan</dd><dt>Scroll</dt><dd>Zoom</dd><dt>Hover a part</dt><dd>Name, function and specs</dd></dl></section>
+        <section class="htouch"><h3>Touch</h3><dl>
+          <dt>One-finger drag</dt><dd>Turn the model</dd><dt>Two-finger drag</dt><dd>Pan</dd><dt>Pinch</dt><dd>Zoom</dd><dt>Tap a part</dt><dd>Name, function and specs</dd></dl></section>
+        <section class="hkeys"><h3>Keyboard</h3><dl>
+          <dt><kbd>Space</kbd></dt><dd>Play or pause</dd><dt><kbd>T</kbd></dt><dd>Guided tour</dd><dt><kbd>C</kbd></dt><dd>Captions</dd><dt><kbd>F</kbd></dt><dd>Full screen</dd>
+          <dt><kbd>X</kbd> <kbd>L</kbd> <kbd>W</kbd></dt><dd>Cutaway, labels, wiring</dd><dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd>Camera views</dd>
+          <dt><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Turn</dd><dt><kbd>Shift</kbd> + arrows</dt><dd>Pan</dd><dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>Zoom</dd><dt><kbd>?</kbd></dt><dd>This panel</dd></dl></section>
+      </div>
+    </div>
+  </div>
   <svg id="focus" aria-hidden="true"></svg>
   <div id="wlegend" hidden><span><i style="background:#e53935"></i>Power 400 V</span><span><i style="background:#ffb300"></i>Control 24 V / 230 V</span><span><i style="background:#43a047"></i>Signals</span></div>
   <p id="cap" hidden aria-live="polite"></p>
@@ -1193,13 +1223,20 @@ function __startPacker() {
   const ptrs = new Map(); let pinch0 = 0;
   let ROT = false;
   const LXY = (e) => { if (ROT) return { x: e.clientY, y: window.innerWidth - e.clientX }; const r = stage.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
-  el.addEventListener("pointerdown", (e) => { if (tour) tour.userNav = true; try { el.setPointerCapture(e.pointerId); } catch (err) {} ptrs.set(e.pointerId, LXY(e)); if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); } });
+  let panMode = false, mid0 = null;
+  const _pr = new THREE.Vector3(), _pu = new THREE.Vector3();
+  function panBy(dx, dy) { camera.updateMatrixWorld(); _pr.setFromMatrixColumn(camera.matrixWorld, 0); _pu.setFromMatrixColumn(camera.matrixWorld, 1);
+    const s = 2 * cam.r * Math.tan((camera.fov * Math.PI / 180) / 2) / Math.max(1, stage.clientHeight); goal.target.addScaledVector(_pr, -dx * s).addScaledVector(_pu, dy * s); }
+  el.addEventListener("contextmenu", (e) => e.preventDefault());
+  el.addEventListener("pointerdown", (e) => { panMode = e.pointerType === "mouse" && (e.button === 2 || e.button === 1 || e.shiftKey); if (tour) tour.userNav = true; try { el.setPointerCapture(e.pointerId); } catch (err) {} ptrs.set(e.pointerId, LXY(e)); if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); } });
   el.addEventListener("pointermove", (e) => { if (!ptrs.has(e.pointerId)) return; const p = ptrs.get(e.pointerId), q = LXY(e), dx = q.x - p.x, dy = q.y - p.y; ptrs.set(e.pointerId, q);
-    if (ptrs.size === 1) { goal.th -= dx * 0.006; goal.ph = Math.min(1.56, Math.max(0.08, goal.ph - dy * 0.006)); }
-    else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch0) goal.r = Math.min(16000, Math.max(700, goal.r * pinch0 / d)); pinch0 = d; } });
-  const pUp = (e) => { ptrs.delete(e.pointerId); pinch0 = 0; if (tour && ptrs.size === 0) { tour.userNav = false; restoreTourCam(); } }; el.addEventListener("pointerup", pUp); el.addEventListener("pointercancel", pUp);
+    if (ptrs.size === 1) { if (panMode) panBy(dx, dy); else { goal.th -= dx * 0.006; goal.ph = Math.min(1.56, Math.max(0.08, goal.ph - dy * 0.006)); } }
+    else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      if (pinch0) goal.r = Math.min(16000, Math.max(700, goal.r * pinch0 / d)); pinch0 = d;
+      if (mid0) panBy(mx - mid0.x, my - mid0.y); mid0 = { x: mx, y: my }; } });
+  const pUp = (e) => { ptrs.delete(e.pointerId); pinch0 = 0; mid0 = null; if (!ptrs.size) panMode = false; if (tour && ptrs.size === 0) { tour.userNav = false; restoreTourCam(); } }; el.addEventListener("pointerup", pUp); el.addEventListener("pointercancel", pUp);
   el.addEventListener("wheel", (e) => { e.preventDefault(); if (tour) { tour.userNav = true; clearTimeout(tour.wheelT); tour.wheelT = setTimeout(() => { if (tour) { tour.userNav = false; restoreTourCam(); } }, 1400); } goal.r = Math.min(16000, Math.max(700, goal.r * (1 + Math.sign(e.deltaY) * 0.1))); }, { passive: false });
-  el.addEventListener("keydown", (e) => { const s = 0.08; const k = { ArrowLeft: () => (goal.th += s), ArrowRight: () => (goal.th -= s), ArrowUp: () => (goal.ph = Math.max(0.08, goal.ph - s)), ArrowDown: () => (goal.ph = Math.min(1.56, goal.ph + s)), "+": () => (goal.r *= 0.9), "=": () => (goal.r *= 0.9), "-": () => (goal.r *= 1.1) }[e.key]; if (k) { e.preventDefault(); if (tour) { tour.userNav = true; clearTimeout(tour.wheelT); tour.wheelT = setTimeout(() => { if (tour) { tour.userNav = false; restoreTourCam(); } }, 1400); } k(); } });
+  el.addEventListener("keydown", (e) => { const s = 0.08; if (e.shiftKey && /^Arrow/.test(e.key)) { e.preventDefault(); const st = 40; ({ ArrowLeft: () => panBy(st, 0), ArrowRight: () => panBy(-st, 0), ArrowUp: () => panBy(0, st), ArrowDown: () => panBy(0, -st) })[e.key](); return; } const k = { ArrowLeft: () => (goal.th += s), ArrowRight: () => (goal.th -= s), ArrowUp: () => (goal.ph = Math.max(0.08, goal.ph - s)), ArrowDown: () => (goal.ph = Math.min(1.56, goal.ph + s)), "+": () => (goal.r *= 0.9), "=": () => (goal.r *= 0.9), "-": () => (goal.r *= 1.1) }[e.key]; if (k) { e.preventDefault(); if (tour) { tour.userNav = true; clearTimeout(tour.wheelT); tour.wheelT = setTimeout(() => { if (tour) { tour.userNav = false; restoreTourCam(); } }, 1400); } k(); } });
 
   // ---------------- labels
   const R0 = (x, y, z) => S.root.localToWorld(new THREE.Vector3(x, y, z));
@@ -1299,17 +1336,19 @@ function __startPacker() {
     if (x + w > SW - 8) x = cx - w - 16; if (y + h > SH - 8) y = Math.max(8, cy - h - 16);
     tip.style.left = `${Math.max(8, x)}px`; tip.style.top = `${y}px`;
   }
-  let lastPick = 0, downAt = null;
+  let lastPick = 0, downAt = null, tapHandled = 0;
+  function tapAt(q, type) { const o = pick(q.x, q.y); if (!o || ((o.userData.part + "|" + o.userData.unit) === hoverKey && type !== "mouse" && !tip.hidden)) showTip(null); else showTip(o, q.x, q.y); }
+  el.addEventListener("click", (e) => { if (performance.now() - tapHandled < 700) return; if (e.detail === 0) return; tapAt(LXY(e), "touch"); });
   el.addEventListener("pointermove", (e) => {
     if (e.pointerType !== "mouse" || ptrs.size) return;
     const t = performance.now(); if (t - lastPick < 60) return; lastPick = t;
     const q = LXY(e); showTip(pick(q.x, q.y), q.x, q.y);
   });
-  el.addEventListener("pointerleave", () => { if (!ptrs.size) showTip(null); });
-  el.addEventListener("pointerdown", (e) => { const q = LXY(e); downAt = { x: q.x, y: q.y, t: performance.now() }; if (e.pointerType === "mouse") showTip(null); });
+  el.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse" && !ptrs.size) showTip(null); });
+  el.addEventListener("pointerdown", (e) => { const q = LXY(e); if (downAt && e.pointerType !== "mouse") { downAt.multi = true; return; } downAt = { x: q.x, y: q.y, t: performance.now() }; if (e.pointerType === "mouse") showTip(null); });
   el.addEventListener("pointerup", (e) => {
-    if (!downAt) return; const q = LXY(e), moved = Math.hypot(q.x - downAt.x, q.y - downAt.y), quick = performance.now() - downAt.t < 350; downAt = null;
-    if (moved < 8 && quick) { const o = pick(q.x, q.y); if (!o || (o.userData.part + "|" + o.userData.unit) === hoverKey && e.pointerType !== "mouse") showTip(null); else showTip(o, q.x, q.y); }
+    if (!downAt) return; const q = LXY(e), moved = Math.hypot(q.x - downAt.x, q.y - downAt.y), quick = performance.now() - downAt.t < 600; const multi = downAt.multi; downAt = null;
+    if (moved < 14 && quick && !multi) { tapHandled = performance.now(); tapAt(q, e.pointerType); }
   });
 
   // ---------------- wiring mode: door opens, cables colour-coded with moving flow
@@ -1479,6 +1518,11 @@ function __startPacker() {
     if (map[k]) { e.preventDefault(); map[k](); return; }
     if (/^[1-7]$/.test(k)) { const b = document.querySelectorAll("#views .btn")[+k - 1]; if (b) { e.preventDefault(); b.click(); } }
   });
+  const helpBtn = q("help"), helpP = q("helpp");
+  function setHelp(on) { helpP.hidden = !on; helpBtn.setAttribute("aria-expanded", String(on)); if (on) { setQA(false); q("helpx").focus({ preventScroll: true }); } else helpBtn.focus({ preventScroll: true }); }
+  helpBtn.onclick = () => setHelp(helpP.hidden); q("helpx").onclick = () => setHelp(false);
+  helpP.addEventListener("pointerdown", (e) => { if (e.target === helpP) setHelp(false); });
+  window.addEventListener("keydown", (e) => { if (e.key === "?" ) { e.preventDefault(); setHelp(helpP.hidden); } else if (e.key === "Escape" && !helpP.hidden) setHelp(false); });
   function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(stage); resize();
 
@@ -1486,7 +1530,9 @@ function __startPacker() {
   let last = performance.now(), easeLast = last;
   let onScreen = true; if ("IntersectionObserver" in window) new IntersectionObserver((es) => { onScreen = es[0].isIntersecting; }, { threshold: 0.05 }).observe(stage);
   const maxDpr = Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2); let dpr = maxDpr, ftAcc = 0, ftN = 0, ftT = 0, uiT = 0, firstFrame = false;
-  const loaderEl = q("loader"), coach = q("coach"); const hideCoach = () => coach && coach.classList.add("gone");
+  const loaderEl = q("loader"), coach = q("coach");
+  if (coach) coach.textContent = touch ? "Drag to turn, two fingers to pan, pinch to zoom, tap a part for details" : "Drag to turn, right-drag to pan, scroll to zoom, hover a part for details. Press ? for shortcuts";
+  if (touch) { setLbl(q("help"), "Help"); q("help").title = "Controls"; } const hideCoach = () => coach && coach.classList.add("gone");
   setTimeout(hideCoach, 6500); el.addEventListener("pointerdown", hideCoach, { once: true });
   function frame(now) {
     if ((document.hidden || !onScreen) && !document.body.classList.contains("fsmode")) { last = now; easeLast = now; requestAnimationFrame(frame); return; }
