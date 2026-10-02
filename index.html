@@ -474,7 +474,7 @@ if (typeof module !== "undefined") module.exports = { makeLib };
 function buildPacker(THREE, canvasFactory) {
   const L = makeLib(THREE, canvasFactory);
   const { V, X, Y, Z, MAT, T, mesh, qAxis, cyl, box, rbox, lathe, tube, registry, bolt, setPart, setUnit } = L;
-  const D = { R: 265, RI: 259, H: 1800, TOPF: 350, BASEF: 325, FT: 12, HR: 390, HZ: 500, HRAD: 190, HW: 260, MZ: 1120, SZ: 420, ZLOW: 850, BETA: 40, PLAT: 500, PED: 300 };
+  const D = { R: 265, RI: 259, H: 1800, TOPF: 350, BASEF: 325, FT: 12, HR: 460, HZ: 500, HRAD: 190, HW: 260, MZ: 1120, SZ: 420, ZLOW: 850, BETA: 40, PLAT: 500, PED: 300 };
   const K = Math.SQRT2 * Math.tan((D.BETA / 2) * Math.PI / 180), Z0 = D.ZLOW + D.RI;
   const plateZ = (x, y) => Z0 + y - K * Math.abs(x);
   const floorZ = -D.PLAT - D.PED, deckZ = -D.PED;
@@ -600,7 +600,7 @@ function buildPacker(THREE, canvasFactory) {
     setPart("tube");
     // ---- outlet opening + frame on tube
     const sill = plateZ(D.RI * Math.cos(th), D.RI * Math.sin(th));
-    const og = new THREE.CylinderGeometry(D.R + 1.5, D.R + 1.5, 220, 16, 1, true, th + Math.PI / 2 - 0.38, 0.76); og.rotateX(Math.PI / 2); og.translate(0, 0, sill + 110);
+    const og = new THREE.CylinderGeometry(D.R + 1.5, D.R + 1.5, 130, 16, 1, true, th + Math.PI / 2 - 0.38, 0.76); og.rotateX(Math.PI / 2); og.translate(0, 0, sill + 70);
     mesh(og, MAT.opening, root);
     setPart("manifold");
     // ---- valve manifold (block, 4 valves with coils + LEDs + DIN plugs + brass overrides + silencers)
@@ -623,29 +623,35 @@ function buildPacker(THREE, canvasFactory) {
     cyl(g, V(D.R + 55, 150, 1420), Z, 60, 18, null, MAT.brass, 20); cyl(g, V(D.R + 55, 150, 1480), Z, 40, 17, null, MAT.black, 20);
     U.leds.push(mesh(new THREE.SphereGeometry(7, 12, 10), MAT.ledOff.clone(), g, V(D.R + 74, 150, 1506)));
     setPart("neck");
-    // ---- tapered neck body (carries the motor plate, feeds the housing) + outlet duct from the tube
-    const frustum = (r0a, r0b, t0, z0, r1a, r1b, t1, z1) => {
-      const v = [[r0a, -t0, z0], [r0b, -t0, z0], [r0b, t0, z0], [r0a, t0, z0], [r1a, -t1, z1], [r1b, -t1, z1], [r1b, t1, z1], [r1a, t1, z1]];
-      const f = [[0, 1, 2, 3], [7, 6, 5, 4], [0, 4, 5, 1], [1, 5, 6, 2], [2, 6, 7, 3], [3, 7, 4, 0]];
-      const pos = []; f.forEach(([a, b, c, d]) => { for (const i of [a, b, c, a, c, d]) pos.push(...v[i]); });
-      const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.computeVertexNormals(); return geo;
-    };
-    const neckTop = MZ - 160, neckBot = HZ + D.HRAD - 6;
-    mesh(frustum(D.R + 8, HR + 150, 165, neckTop, HR - 95, HR + 75, 95, neckBot), MAT.body, g);
-    box(g, V((D.R + 8 + HR + 150) / 2, 0, neckTop - 8), [HR + 150 - D.R, 350, 16], MAT.body);                     // top rim
-    mesh(frustum(D.R - 4, D.R + 30, 110, sill, D.R - 4, D.R + 30, 110, sill + 200), MAT.body, g);                     // outlet duct
-    box(g, V(HR - 10, 0, neckBot + 6), [230, 250, 12], MAT.flange);                                                   // flange to housing
-    for (const [a, b] of [[-100, -110], [100, -110], [-100, 110], [100, 110]]) bolt(R, V(HR - 10 + a, b, neckBot + 12), Z, 8);
-    setPart("housing");
-    // ---- volute housing (spiral extrusion), cover with bolts, inlet flange
-    const vs = new THREE.Shape();
-    for (let i = 0; i <= 64; i++) { const a = -Math.PI / 2 + 2 * Math.PI * i / 64; const r = 172 + 38 * i / 64; const px = r * Math.cos(a), pz = r * Math.sin(a); if (i === 0) vs.moveTo(px, pz); else vs.lineTo(px, pz); }
-    vs.lineTo(210 * 0.2, -300); vs.lineTo(-40, -300); vs.lineTo(-40, -172);
-    const vg = new THREE.ExtrudeGeometry(vs, { depth: D.HW, bevelEnabled: true, bevelThickness: 5, bevelSize: 5, bevelSegments: 2, curveSegments: 4 });
-    vg.rotateX(Math.PI / 2); vg.translate(0, D.HW / 2, 0);
-    mesh(vg, MAT.housing, g, V(HR, 0, HZ));
-    cyl(g, V(HR, D.HW / 2 + 5, HZ), Y, 14, 155, null, MAT.housing, 48);
-    for (let k = 0; k < 8; k++) { const a = 2 * Math.PI * k / 8; bolt(R, V(HR + 136 * Math.cos(a), D.HW / 2 + 19, HZ + 136 * Math.sin(a)), Y, 10); }
+    // ---- chute body (as surveyed, sketch): flat side plates; profile = straight edge on the tube and a convex
+    //      quarter-ellipse sweeping out and down to the flange; the flange spans the full top of the housing bowl,
+    //      so the housing and the motor sit on the chute's centre line
+    const HRAD = HR - D.R - 5, ZF = HZ + 175, ZT = MZ - 150, CHW = 260, ZTT = 1400, XS = HR - 100;   // ZTT: top of the edge on the tube
+    const rIn = HR - HRAD, rOut = HR + HRAD;
+    const chuteR = (z) => z > ZT ? D.R + (ZTT - z) * (XS - D.R) / (ZTT - ZT) : XS + (rOut - XS) * Math.sqrt(Math.max(0, 1 - ((z - ZF) / (ZT - ZF)) ** 2));   // outer face radius at height z
+    U.chuteR = chuteR;
+    const extrudeY = (shape, depth, mat, bevel = 4) => { const eg = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 48 });
+      eg.rotateX(Math.PI / 2); eg.translate(0, depth / 2, 0); return mesh(eg, mat, g); };
+    const cs = new THREE.Shape();
+    cs.moveTo(D.R - 4, ZF); cs.lineTo(D.R - 4, ZTT); cs.lineTo(XS, ZT);
+    cs.absellipse(XS, ZF, rOut - XS, ZT - ZF, Math.PI / 2, 0, true); cs.lineTo(D.R - 4, ZF);
+    extrudeY(cs, CHW, MAT.body);
+    box(g, V((D.R + rOut) / 2, 0, ZF), [rOut - D.R + 30, CHW + 30, 12], MAT.flange);
+    for (const x of [D.R + 40, (D.R + rOut) / 2, rOut - 10]) for (const yy of [-CHW / 2 - 8, CHW / 2 + 8]) bolt(R, V(x, yy, ZF + 6), Z, 8);
+    // motor-plate support gussets following the curved face
+    const gx0 = HR - 90, gx1 = HR + 150, zp = MZ - 154;
+    const gsh = new THREE.Shape(); gsh.moveTo(gx0, zp); gsh.lineTo(gx1, zp);
+    for (let i = 0; i <= 12; i++) { const x = gx1 - (gx1 - gx0) * i / 12; const zz = x <= XS ? ZT : ZF + (ZT - ZF) * Math.sqrt(Math.max(0, 1 - ((x - XS) / (rOut - XS)) ** 2)); gsh.lineTo(x, Math.min(zp, zz)); }
+    for (const yy of [-115, 115]) { const bg2 = new THREE.ExtrudeGeometry(gsh, { depth: 10, bevelEnabled: false }); bg2.rotateX(Math.PI / 2); mesh(bg2, MAT.body, g, V(0, yy + 5, 0)); }
+    // ---- impeller housing (sketch): half circle round the impeller with short straight walls up to the flange
+    const hsh = new THREE.Shape();
+    const bowl = (rad, sh, top = ZF) => { sh.moveTo(HR - rad, top); sh.lineTo(HR - rad, HZ);
+      for (let i = 1; i <= 48; i++) { const t = Math.PI + Math.PI * i / 48; sh.lineTo(HR + rad * Math.cos(t), HZ + rad * Math.sin(t)); }
+      sh.lineTo(HR + rad, top); sh.lineTo(HR - rad, top); return sh; };
+    extrudeY(bowl(HRAD, hsh), D.HW, MAT.housing, 5);
+    { const cg = new THREE.ExtrudeGeometry(bowl(HRAD - 30, new THREE.Shape(), ZF - 22), { depth: 14, bevelEnabled: true, bevelThickness: 2, bevelSize: 2, bevelSegments: 1 }); cg.rotateX(Math.PI / 2); cg.translate(0, D.HW / 2 + 12, 0); mesh(cg, MAT.housing, g); }
+    for (let k = 0; k < 7; k++) { const a = Math.PI + Math.PI * (k + 0.5) / 7; bolt(R, V(HR + (HRAD - 48) * Math.cos(a), D.HW / 2 + 19, HZ + (HRAD - 48) * Math.sin(a)), Y, 10); }
+    for (const sx of [-1, 1]) for (const zz of [HZ + 55, HZ + 120]) bolt(R, V(HR + sx * (HRAD - 48), D.HW / 2 + 19, zz), Y, 10);
     cyl(g, V(HR, D.HW / 2 + 19, HZ), Y, 16, 45, 40, MAT.housing, 32);
     if (T.number) { const nm = mesh(new THREE.PlaneGeometry(90, 90), new THREE.MeshBasicMaterial({ map: T.number(lab), transparent: true, depthWrite: false }), g, V(HR + 60, D.HW / 2 + 20, HZ + 60)); nm.rotation.x = -Math.PI / 2; nm.rotation.z = Math.PI; }
     setPart("impeller");
@@ -660,10 +666,10 @@ function buildPacker(THREE, canvasFactory) {
     anim.spin.push({ obj: imp, axis: "y", rate: -8.2 });
     setPart("bearing");
     // ---- drive-side bearing housing (lathe) + grease nipple + shaft
-    lathe(g, [[0, 0], [95, 0], [95, 16], [80, 20], [72, 150], [62, 184], [0, 184]], V(HR, -D.HW / 2 - 2, HZ), V(0, -1, 0), MAT.paint, 40);
+    lathe(g, [[0, 0], [95, 0], [95, 16], [80, 20], [72, 90], [62, 118], [0, 118]], V(HR, -D.HW / 2 - 2, HZ), V(0, -1, 0), MAT.paint, 40);
     for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2; bolt(R, V(HR + 80 * Math.cos(a), -D.HW / 2 - 20, HZ + 80 * Math.sin(a)), V(0, -1, 0), 12); }
-    cyl(g, V(HR, -250, HZ + 72), Z, 18, 5, null, MAT.brass, 8);
-    cyl(g, V(HR, -D.HW / 2 - 180, HZ), V(0, -1, 0), 110, 22, null, MAT.steel, 20);
+    cyl(g, V(HR, -200, HZ + 72), Z, 18, 5, null, MAT.brass, 8);
+    cyl(g, V(HR, -D.HW / 2 - 116, HZ), V(0, -1, 0), 100, 22, null, MAT.steel, 20);
     setPart("pulleys");
     // ---- pulleys: V-groove lathe + web with holes + taper bush
     function pulley(r, zc, yc, rate) {
@@ -682,12 +688,12 @@ function buildPacker(THREE, canvasFactory) {
       anim.spin.push({ obj: pg, axis: "y", rate });
       return pg;
     }
-    pulley(118, HZ, -350, -8.2); pulley(63, MZ, -350, -15.5);
+    pulley(118, HZ, -257, -8.2); pulley(63, MZ, -257, -15.5);
     setPart("belts");
     // ---- belts: 4 bands + moving cogs (instanced, animated)
     const beltCurves = [];
     for (let k = 0; k < 4; k++) {
-      const pts = []; const a = Math.asin((118 - 63) / (MZ - HZ)); const yb = -350 - k * 17 - 8.5;
+      const pts = []; const a = Math.asin((118 - 63) / (MZ - HZ)); const yb = -257 - k * 17 - 8.5;
       for (let i = 0; i <= 30; i++) { const t = a - (Math.PI + 2 * a) * i / 30; pts.push(V(HR + 116 * Math.cos(t), yb, HZ + 116 * Math.sin(t))); }
       for (let i = 1; i < 18; i++) { const t = Math.PI - a - (Math.PI - 2 * a) * i / 18; pts.push(V(HR + 61 * Math.cos(t), yb, MZ + 61 * Math.sin(t))); }
       const cv = new THREE.CatmullRomCurve3(pts, true); beltCurves.push(cv);
@@ -697,7 +703,7 @@ function buildPacker(THREE, canvasFactory) {
     U.belts = { curves: beltCurves, cogs, n: nCog, phase: 0 };
     setPart("motor");
     // ---- motor IEC 132: lathe frame, fins, feet, terminal box, cowl + grille + fan, eye, nameplate, marker
-    const mt = -330;
+    const mt = -237;
     const mg = new THREE.Group(); g.add(mg);
     lathe(mg, [[0, 0], [40, 0], [40, 18], [100, 22], [118, 34], [118, 44], [112, 50], [112, 364], [118, 370], [118, 378], [100, 386], [0, 386]], V(HR, mt, MZ), Y, MAT.motor, 56);
     for (let k = 0; k < 26; k++) { const a = 2 * Math.PI * k / 26; if (Math.sin(a) < -0.6) continue;
@@ -716,7 +722,7 @@ function buildPacker(THREE, canvasFactory) {
     mesh(new THREE.TorusGeometry(20, 5, 8, 20), MAT.motor, mg, V(HR, mt + 250, MZ + 138)).rotation.y = Math.PI / 2;
     if (MAT.nameplate) { const np = mesh(new THREE.PlaneGeometry(110, 55), MAT.nameplate, mg, V(HR - 126, mt + 210, MZ + 20)); np.rotation.set(0, -Math.PI / 2, 0); np.rotateX(0); np.rotation.x = Math.PI / 2; np.rotation.y = -Math.PI / 2; }
     if (MAT.marker) { const mk = mesh(new THREE.PlaneGeometry(150, 56), MAT.marker, mg, V(HR + 123, mt + 420, MZ + 30)); mk.rotation.set(Math.PI / 2, Math.PI / 2, 0); }
-    cyl(g, V(HR, -350, MZ), Y, 50, 19, null, MAT.steel, 16);
+    cyl(g, V(HR, -257, MZ), Y, 50, 19, null, MAT.steel, 16);
     setPart("motorbase");
     // motor base (hinged) + jack bolt with nuts
     box(g, V(HR, mt + 190, MZ - 145), [300, 400, 18], MAT.flange);
@@ -728,35 +734,45 @@ function buildPacker(THREE, canvasFactory) {
     // ---- belt guard (bevelled stadium), brackets, bolts
     const gs = new THREE.Shape(); gs.absarc(HR, HZ, 148, Math.PI, 2 * Math.PI, false); gs.absarc(HR, MZ, 98, 0, Math.PI, false); gs.closePath();
     const gg = new THREE.ExtrudeGeometry(gs, { depth: 104, bevelEnabled: true, bevelThickness: 4, bevelSize: 4, bevelSegments: 3, curveSegments: 28 }); gg.rotateX(Math.PI / 2);
-    mesh(gg, MAT.guard, g, V(0, -332, 0));
-    for (const zz of [HZ + 60, MZ - 60]) { box(g, V(HR - 150, -300, zz), [14, 70, 40], MAT.paint); bolt(R, V(HR - 158, -300, zz), V(-1, 0, 0), 8); }
+    mesh(gg, MAT.guard, g, V(0, -239, 0));
+    for (const zz of [HZ + 60, MZ - 60]) { box(g, V(HR - 150, -207, zz), [14, 70, 40], MAT.paint); bolt(R, V(HR - 158, -207, zz), V(-1, 0, 0), 8); }
     setPart("gate");
-    // ---- flow gate body + sliding gate plate + spout flange pair + spout with slot
-    const gz = (SZ + HZ - 150) / 2, gh = (HZ - 150 - SZ) + 100;
-    box(g, V(HR + 95, 0, gz), [150, 150, gh], MAT.gate);
-    for (const zz of [gz + gh / 2, gz - gh / 2]) { box(g, V(HR + 95, 0, zz), [176, 176, 12], MAT.paint); for (const [a, b] of [[-75, -75], [75, -75], [-75, 75], [75, 75]]) bolt(R, V(HR + 95 + a, b, zz + 6), Z, 8); }
-    U.gatePlate = box(g, V(HR + 95, 0, gz), [120, 170, 10], MAT.steel);
-    box(g, V(HR + 172, 0, SZ), [12, 124, 124], MAT.paint); box(g, V(HR + 181, 0, SZ), [6, 118, 118], MAT.rubber); box(g, V(HR + 190, 0, SZ), [12, 124, 124], MAT.paint);
-    for (const [a, b] of [[-46, -46], [46, -46], [-46, 46], [46, 46]]) { bolt(R, V(HR + 196, a, SZ + b), X, 10); R.add("n10", () => new THREE.CylinderGeometry(9, 9, 8, 6), MAT.zinc, V(HR + 162, a, SZ + b), qAxis(X)); }
+    // ---- outlet duct from the housing -> gate body with slide plate -> spout
+    //      the slide plate moves across the outlet channel (along y); the 3-position cylinder on the drive side pulls it open
+    const GX0 = HR + 172, GX1 = GX0 + 60, CH = 45;                           // gate body along the flow (x), channel half-size
+    box(g, V(HR + 150, 0, SZ), [60, 2 * CH + 16, 2 * CH + 16], MAT.housing);                  // outlet duct from the bowl
+    // gate body: open-sided frame so the plate and channel can be seen; pocket extends to the drive side for the open plate
+    box(g, V((GX0 + GX1) / 2, -80, SZ), [GX1 - GX0, 340, 16], MAT.gate).position.z = SZ + CH + 8;
+    box(g, V((GX0 + GX1) / 2, -80, SZ - CH - 8), [GX1 - GX0, 340, 16], MAT.gate);
+    box(g, V(GX0 + 4, -80, SZ), [8, 340, 2 * CH + 32], MAT.gate); box(g, V(GX1 - 4, -80, SZ), [8, 340, 2 * CH + 32], MAT.gate);
+    box(g, V(GX0 + 4, 0, SZ), [9, 2 * CH, 2 * CH], MAT.opening); box(g, V(GX1 - 4, 0, SZ), [9, 2 * CH, 2 * CH], MAT.opening);   // flow ports
+    for (const yy of [-240, 80]) for (const zz of [SZ - CH - 16, SZ + CH + 16]) bolt(R, V((GX0 + GX1) / 2, yy, zz), Z, 7);
+    const gp = new THREE.Group(); gp.position.set((GX0 + GX1) / 2, 0, SZ); g.add(gp);          // moves along y
+    box(gp, V(0, 0, 0), [10, 180, 2 * CH + 20], MAT.yellow);                                  // slide plate (closed: covers the channel), yellow so its travel is easy to follow
+    box(gp, V(0, -96, 0), [24, 16, 36], MAT.zinc);                                            // clevis block
+    U.gatePlate = gp;
+    // spout flange pair on the gate outlet + spout with discharge slot
+    box(g, V(GX1 + 6, 0, SZ), [12, 124, 124], MAT.paint); box(g, V(GX1 + 15, 0, SZ), [6, 118, 118], MAT.rubber); box(g, V(GX1 + 24, 0, SZ), [12, 124, 124], MAT.paint);
+    for (const [a, b] of [[-46, -46], [46, -46], [-46, 46], [46, 46]]) { bolt(R, V(GX1 + 30, a, SZ + b), X, 10); R.add("n10", () => new THREE.CylinderGeometry(9, 9, 8, 6), MAT.zinc, V(GX1 - 4, a, SZ + b), qAxis(X)); }
     setPart("spout");
-    cyl(g, V(HR + 196, 0, SZ), X, 300, 30, null, MAT.gate, 32);
-    cyl(g, V(HR + 496, 0, SZ), X, 90, 30, 5, MAT.gate, 32);
-    box(g, V(HR + 430, 0, SZ - 29), [150, 20, 4], MAT.opening);
+    cyl(g, V(GX1 + 30, 0, SZ), X, 300, 30, null, MAT.gate, 32);
+    cyl(g, V(GX1 + 330, 0, SZ), X, 90, 30, 5, MAT.gate, 32);
+    box(g, V(GX1 + 260, 0, SZ - 29), [150, 20, 4], MAT.opening);
     setPart("actuator");
-    // ---- 3-position actuator (tie rods, nuts, ports, rod + clevis)
-    const ca = V(HR + 130, 0, SZ - 130);
-    box(g, V(ca.x, -40, ca.z), [96, 16, 96], MAT.paint);
-    for (const [a, b] of [[-38, -38], [38, -38], [-38, 38], [38, 38]]) bolt(R, V(ca.x + a, -32, ca.z + b), Y, 8);
-    rbox(g, V(ca.x, -64, ca.z), [68, 28, 68], 6, MAT.alu);
-    cyl(g, V(ca.x, -78, ca.z), V(0, -1, 0), 148, 29, null, MAT.alu, 32);
-    rbox(g, V(ca.x, -240, ca.z), [68, 28, 68], 6, MAT.alu);
-    for (const [a, b] of [[-26, -26], [26, -26], [-26, 26], [26, 26]]) { cyl(g, V(ca.x + a, -50, ca.z + b), V(0, -1, 0), 206, 3.5, null, MAT.zinc, 8); for (const yy of [-48, -256]) R.add("tn", () => new THREE.CylinderGeometry(6, 6, 5, 6), MAT.zinc, V(ca.x + a, yy, ca.z + b), qAxis(Y)); }
-    cyl(g, V(ca.x, -254, ca.z), V(0, -1, 0), 84, 23, null, MAT.alu, 28);
-    rbox(g, V(ca.x, -342, ca.z), [54, 18, 54], 5, MAT.alu);
-    cyl(g, V(ca.x, -351, ca.z), V(0, -1, 0), 34, 7, null, MAT.zinc, 12); R.add("sn", () => new THREE.CylinderGeometry(11, 11, 7, 6), MAT.zinc, V(ca.x, -356, ca.z), qAxis(Y));
-    for (const [yy, zz] of [[-64, 34], [-240, 34], [-300, 26]]) cyl(g, V(ca.x, yy, ca.z + zz), Z, 16, 7, null, MAT.brass, 12);
-    U.rod = cyl(g, V(ca.x, -50, ca.z), Y, 1, 9, null, MAT.zinc, 16);
-    U.clevis = box(g, V(ca.x, 0, ca.z), [30, 24, 30], MAT.zinc);
+    // ---- 3-position tandem cylinder on the drive side of the gate body (axis along y)
+    const ca = V((GX0 + GX1) / 2, 0, SZ); U.gateCa = ca;
+    const yF = -265, yM = -420, yRr = -520;                                   // front cap, middle cap, rear cap
+    box(g, V(ca.x, -254, ca.z), [70, 16, 86], MAT.paint);                    // mounting flange to the gate body pocket
+    rbox(g, V(ca.x, yF, ca.z), [70, 26, 70], 6, MAT.alu);
+    cyl(g, V(ca.x, yF - 13, ca.z), V(0, -1, 0), yF - 13 - (yM + 13), 29, null, MAT.alu, 32);   // stage 1, bore ≈50
+    rbox(g, V(ca.x, yM, ca.z), [70, 26, 70], 6, MAT.alu);
+    cyl(g, V(ca.x, yM - 13, ca.z), V(0, -1, 0), yM - 13 - (yRr + 13), 24, null, MAT.alu, 28); // stage 2, bore ≈40 (sets part-open)
+    rbox(g, V(ca.x, yRr, ca.z), [60, 22, 60], 5, MAT.alu);
+    for (const [a, b] of [[-27, -27], [27, -27], [-27, 27], [27, 27]]) { cyl(g, V(ca.x + a, yF + 13, ca.z + b), V(0, -1, 0), yF - yRr + 2, 3.5, null, MAT.zinc, 8);
+      for (const yy of [yF + 16, yRr - 13]) R.add("tn", () => new THREE.CylinderGeometry(6, 6, 7, 6), MAT.zinc, V(ca.x + a, yy, ca.z + b), qAxis(Y)); }
+    cyl(g, V(ca.x, yRr - 11, ca.z), V(0, -1, 0), 40, 7, null, MAT.zinc, 12); R.add("sn", () => new THREE.CylinderGeometry(11, 11, 7, 6), MAT.zinc, V(ca.x, yRr - 30, ca.z), qAxis(Y));   // stop screw
+    const ports = [yF, yM - 20, yRr]; ports.forEach((yy) => cyl(g, V(ca.x, yy, ca.z + 35), Z, 16, 7, null, MAT.brass, 12)); U.gatePorts = ports;
+    U.rod = cyl(g, V(ca.x, yF + 13, ca.z), Y, 1, 9, null, MAT.zinc, 16);    // piston rod, scaled in y by the animation
     setPart("hook");
     // ---- hook bracket (flat bar with rounded elbow) + sensor with cable + plunger + buffer
     const cl2 = [[HR + 60, HZ + 182]]; const rc = 90, cx0 = HR + 358 - rc, cz0 = HZ + 182 - rc;
@@ -775,27 +791,34 @@ function buildPacker(THREE, canvasFactory) {
     lathe(clampG, [[0, 0], [15, 0], [15, 3], [9, 26], [0, 27]], V(HR + 358, 0, SZ + 78), V(0, 0, -1), MAT.rubber, 24);
     setPart("lcs");
     // ---- local control station (rounded enclosure, legend, bezels, buttons, selector, gland)
-    const ls = V(HR + 20, D.HW / 2 + 60, 830);
-    rbox(g, ls, [130, 78, 130], 10, MAT.white);
-    if (MAT.legend) mesh(new THREE.PlaneGeometry(120, 120), MAT.legend, g, V(ls.x, ls.y + 40, ls.z)).rotation.set(-Math.PI / 2, 0, Math.PI);
+    const lsz = 830, xp = chuteR(lsz) - 70, lsY = CHW / 2 + 12 + 65;
+    // angle plate: one leg bolted flat to the chute side plate, the other leg square to the operator
+    box(g, V(xp - 55, CHW / 2 + 5, lsz), [110, 6, 150], MAT.body);
+    box(g, V(xp + 3, CHW / 2 + 5 + 72, lsz), [6, 150, 150], MAT.body);
+    for (const dz of [-50, 50]) bolt(R, V(xp - 70, CHW / 2 + 8, lsz + dz), Y, 7);
+    const ls = V(xp + 6 + 39, lsY, lsz);
+    const lg = new THREE.Group(); lg.position.copy(ls); lg.rotation.z = -Math.PI / 2; g.add(lg);   // local +y = outward (towards the operator)
+    const L0 = V(0, 0, 0);
+    rbox(lg, L0, [130, 78, 130], 10, MAT.white);
+    if (MAT.legend) mesh(new THREE.PlaneGeometry(120, 120), MAT.legend, lg, V(0, 40, 0)).rotation.set(-Math.PI / 2, 0, Math.PI);
     U.lamp = null;
     U.btn = {};
-    for (const [dx, dz, mat, key] of [[-30, -18, MAT.green, "start"], [30, -18, MAT.red, "stop"]]) { cyl(g, V(ls.x + dx, ls.y + 39, ls.z + dz), Y, 6, 17, null, MAT.alu, 24); U.btn[key] = cyl(g, V(ls.x + dx, ls.y + 45, ls.z + dz), Y, 10, 13, 12, mat.clone(), 24); U.btn[key].userData.y0 = U.btn[key].position.y; }
-    cyl(g, V(ls.x, ls.y + 39, ls.z + 30), Y, 6, 17, null, MAT.alu, 24); U.selector = box(g, V(ls.x, ls.y + 52, ls.z + 30), [34, 14, 9], MAT.black); box(U.selector, V(12, 0, 0), [6, 16, 3], MAT.white);
-    U.lamp = mesh(new THREE.CylinderGeometry(9, 9, 10, 20), MAT.ledOff.clone(), g, V(ls.x, ls.y + 44, ls.z - 48));
-    cyl(g, V(ls.x, ls.y, ls.z - 65), V(0, 0, -1), 20, 11, null, MAT.black, 16);
+    for (const [dx, dz, mat, key] of [[-30, -18, MAT.green, "start"], [30, -18, MAT.red, "stop"]]) { cyl(lg, V(dx, 39, dz), Y, 6, 17, null, MAT.alu, 24); U.btn[key] = cyl(lg, V(dx, 45, dz), Y, 10, 13, 12, mat.clone(), 24); U.btn[key].userData.y0 = U.btn[key].position.y; }
+    cyl(lg, V(0, 39, 30), Y, 6, 17, null, MAT.alu, 24); U.selector = box(lg, V(0, 52, 30), [34, 14, 9], MAT.black); box(U.selector, V(12, 0, 0), [6, 16, 3], MAT.white);
+    U.lamp = mesh(new THREE.CylinderGeometry(9, 9, 10, 20), MAT.ledOff.clone(), lg, V(0, 44, -48));
+    cyl(lg, V(0, 0, -65), V(0, 0, -1), 20, 11, null, MAT.black, 16);
     setPart("hoses");
     // ---- hoses: blue loops over the top (as in photos), actuator feeds, clear aeration
     const onTube = (deg, z, dr = 14) => V((D.R + dr) * Math.cos(deg * Math.PI / 180), (D.R + dr) * Math.sin(deg * Math.PI / 180), z);
     // blue loop above the manifold (stays on this unit's side, clear of the feed pipe and vent)
     tube(g, [V(D.R + 60, -40, 1745), V(D.R + 110, -70, 1950), V(D.R + 40, 40, 2030), V(D.R + 95, 120, 1840), V(D.R + 60, 70, 1745)], 6, MAT.hose, false, 90);
     // blue hoses to the actuator: down the drive side of the tube, under the bearing housing and belt guard
-    for (const [k, py] of [[0, -64], [1, -240]]) {
+    for (const [k, py] of [[0, -265], [1, -440]]) {
       const dy = k * 16;
-      tube(g, [V(D.R + 58, 20 - dy, 1560), onTube(-20 - k * 4, 1520), onTube(-45 - k * 4, 1380), onTube(-45 - k * 4, 360), V(300, -250 - dy, 300), V(ca.x - 30, py - 10, ca.z + 70), V(ca.x, py, ca.z + 42)], 5.5, MAT.hose, false, 120);
+      tube(g, [V(D.R + 58, 20 - dy, 1560), onTube(-20 - k * 4, 1520), onTube(-45 - k * 4, 1380), onTube(-45 - k * 4, 360), V(420, -300 - dy, 325), V(ca.x - 50, py - 30, 325), V(ca.x - 20, py, ca.z + 70), V(ca.x, py, ca.z + 42)], 5.5, MAT.hose, false, 140);
     }
     // clear aeration hose: down the non-drive side of the tube, round below the station, into the volute side
-    tube(g, [V(D.R + 55, 150, 1410), onTube(38, 1360), onTube(45, 1000), onTube(45, 700), V(300, 225, 640), V(HR + 140, 170, HZ + 100), V(HR + 140, 136, HZ + 100)], 5, MAT.clear, false, 120);
+    tube(g, [V(D.R + 55, 150, 1410), onTube(38, 1360), onTube(45, 1000), onTube(45, 700), V(300, 225, 640), V(HR + 120, 175, HZ - 40), V(HR + 120, 136, HZ - 40)], 5, MAT.clear, false, 120);
     for (let k = 0; k < 4; k++) R.add("tie", () => new THREE.TorusGeometry(8, 2, 4, 10), MAT.black, V(D.R + 88, 0 + k * 10, 1200 - k * 120), new THREE.Quaternion());
     setPart("scale");
     // ---- EMTOP EESE230001 platform scale: blue platform on 4 levelling feet, blue square column, tilted stainless indicator head
@@ -845,9 +868,6 @@ function buildPacker(THREE, canvasFactory) {
     bgeo.computeVertexNormals();
     bgeo.rotateX(Math.PI / 2);                 // width along x (along the spout), height along z, thickness along y
     const bag = mesh(bgeo, MAT.bag, bagG); bag.position.set(BW / 2 - 20, 0, -BH / 2);
-    setPart("rag");
-    const ragG = new THREE.SphereGeometry(52, 18, 12); const rp = ragG.attributes.position; for (let i = 0; i < rp.count; i++) { const k = 0.8 + Math.random() * 0.35; rp.setXYZ(i, rp.getX(i) * k * 0.9, rp.getY(i) * k, rp.getZ(i) * k); } ragG.computeVertexNormals();
-    mesh(ragG, MAT.fabric, g, V(HR + 290, 0, SZ + 6));
     U.bagW = BW; U.bagH = BH;
     // clamp: buffer, plunger and lock nut move down onto the bag valve corner, up when full
     U.clampRest = 34; U.clampDown = -8;
@@ -883,15 +903,15 @@ function buildPacker(THREE, canvasFactory) {
     U.manWorld = toRoot(V(D.R + 60, 0, 1640));
     const riserL = (z) => V((D.R + 16) * Math.cos(Math.PI / 4), (D.R + 16) * Math.sin(Math.PI / 4), z);   // cable riser on the tube, non-drive side
     U.route = {
-      tb: [riserL(1330), V(300, 120, 1385), V(470, -40, 1375), V(505, -150, 1300), V(HR + 80, -330 + 160 - 30, MZ + 140)].map(toRoot),
-      lcs: [riserL(650), V(320, 262, 640), V(ls.x, ls.y, 700), V(ls.x, ls.y, ls.z - 88)].map(toRoot),
+      tb: [riserL(1330), V(300, 120, 1385), V(470, -40, 1375), V(505, -150, 1300), V(HR + 80, -237 + 160 - 30, MZ + 140)].map(toRoot),
+      lcs: [riserL(650), V(330, 290, 640), V(ls.x - 20, 300, 690), V(ls.x, ls.y + 25, lsz - 110), V(ls.x, ls.y, lsz - 88)].map(toRoot),
       man: [riserL(1760), V(300, 120, 1790), V(D.R + 82, 50, 1740), V(D.R + 82, 40, 1728)].map(toRoot),
       aer: [riserL(1500), V(300, 185, 1545), V(D.R + 55, 150, 1525)].map(toRoot),
       clamp: [riserL(740), V(300, 205, 745), V(470, 205, 745), V(565, 60, 725), V(640, 30, 715), V(722, 30, 690), V(772, 24, 600), V(HR + 360, 8, SZ + 126)].map(toRoot),
       riserDeg: (th * 180 / Math.PI) + 45,
     };
-    U.anch = { tb: toRoot(V(HR + 60, -330 + 160, MZ + 150)), lcs: toRoot(V(HR + 20, D.HW / 2 + 60, 830 - 85)), man: toRoot(V(D.R + 92, -60, 1700)), aer: toRoot(V(D.R + 60, 150, 1500)), clamp: toRoot(V(HR + 374, 0, SZ + 120)), col: toRoot(V(D.R + 12, 0, 0)) };
-    U.valveWorld = toRoot(V(D.R + 60, 0, 1720)); U.spoutTip = toRoot(V(HR + 350, 0, SZ + 45)); U.aerate = toRoot(V(HR + 110, 60, HZ + 60));
+    U.anch = { tb: toRoot(V(HR + 60, -237 + 160, MZ + 150)), lcs: toRoot(V(HR + 20, D.HW / 2 + 60, 830 - 85)), man: toRoot(V(D.R + 92, -60, 1700)), aer: toRoot(V(D.R + 60, 150, 1500)), clamp: toRoot(V(HR + 374, 0, SZ + 120)), col: toRoot(V(D.R + 12, 0, 0)) };
+    U.valveWorld = toRoot(V(D.R + 60, 0, 1720)); U.spoutTip = toRoot(V(HR + 350, 0, SZ + 45)); U.aerate = toRoot(V(HR + 110, 60, HZ - 40));
     R.flush(g);
     anim.units.push(U);
   }
@@ -1156,10 +1176,10 @@ function __startPacker() {
     feed: { target: W(-450, 450, 2300), r: 3200, th: -0.7, ph: 1.08 },
     tube: { target: W(0, 0, 1150), r: 2400, th: Math.PI - 0.22, ph: 1.02 },
     plate: { target: W(0, -40, 1000), r: 1700, th: 0.0, ph: 0.62 },
-    housing: { target: W(390 * 0.707, -390 * 0.707, 500), r: 1050, th: 2.25, ph: 1.28 },
-    gate: { target: W(-500 * 0.707, -500 * 0.707, 380), r: 1300, th: 0.6, ph: 1.35 },
-    s1: { target: W(-(390 + 540) * 0.707, -(390 + 540) * 0.707, 250), r: 1900, th: 0.55, ph: 1.22 },
-    clamp: { target: W(-(390 + 358) * 0.707, -(390 + 358) * 0.707, 470), r: 900, th: 0.6, ph: 1.3 },
+    housing: { target: W(460 * 0.707, -460 * 0.707, 520), r: 1050, th: 2.25, ph: 1.28 },
+    gate: { target: W(-640 * 0.707, -520 * 0.707, 430), r: 1250, th: -1.45, ph: 1.2 },
+    s1: { target: W(-(460 + 540) * 0.707, -(460 + 540) * 0.707, 250), r: 1900, th: 0.55, ph: 1.22 },
+    clamp: { target: W(-(460 + 358) * 0.707, -(460 + 358) * 0.707, 470), r: 900, th: 0.6, ph: 1.3 },
     drive: { target: W(-10, -560, 820), r: 2100, th: -0.62, ph: 1.18 },
     top: { target: W(0, 0, 1000), r: 5200, th: 0.0, ph: 0.12 },
     pallet: { target: W(-900, -1450, -250), r: 3300, th: 0.45, ph: 1.08 },
@@ -1261,8 +1281,8 @@ function __startPacker() {
     plate: { n: "Bent diaphragm plate", f: "Splits the incoming stream left and right; each half runs limestone down to its own outlet.", s: ["Bent in two on its centre line (≤ 60°)", "Welded into the ≈45° joint; front of ridge ≈850 mm above base flange", "Wear item — check thickness at TC-11"] },
     manifold: { n: "Solenoid valve manifold", f: "Switch compressed air to the gate actuator. The LEDs show which valve the PLC has switched on.", s: ["4 stations: full open, part open, close (TBC), spare", "DIN plug coils, brass manual overrides", "Air ≈6 bar (TBC)"] },
     aerv: { n: "Aeration valve", f: "Feeds air into the housing during filling so the limestone stays fluid.", s: ["2/2 solenoid valve, brass body", "Clear PVC aeration hose to the housing"] },
-    neck: { n: "Chute body (tapered neck)", f: "Carries the motor plate and guides limestone from the tube outlet down into the impeller housing.", s: ["Fabricated tapered body, flanged to the housing", "Outlet duct from the centre tube on its inner side"] },
-    housing: { n: "Impeller housing (volute)", f: "Encloses the impeller and directs the aerated limestone to the flow gate.", s: ["Volute Ø≈380 × 260 mm", "Bolted cover on the non-drive side (8 bolts)", "Inspect liner and clearance every 2–3 years (TC-10)"] },
+    neck: { n: "Chute body", f: "Guides limestone from the tube outlet down into the impeller housing; the motor plate sits on top on two gussets.", s: ["Fabricated: flat side plates, straight edge on the tube, curved outer face", "Bolted flange across the full top of the impeller housing", "Motor and impeller on the chute centre line"] },
+    housing: { n: "Impeller housing (volute)", f: "Encloses the impeller and directs the aerated limestone to the flow gate.", s: ["Half-round bottom R≈190 with short straight walls up to the chute flange, 260 wide; the impeller stays inside it", "Bolted cover of the same shape on the non-drive side (11 bolts)", "Inspect liner and clearance every 2–3 years (TC-10)"] },
     impeller: { n: "Impeller", f: "Aerates the powder and throws it round the volute towards the gate.", s: ["6 curved blades (count TBC)", "≈781 rpm (motor 1475 rpm ÷ 1.89)"] },
     bearing: { n: "Bearing housing and shaft", f: "Supports the impeller shaft on the drive side.", s: ["Shaft Ø≈45 mm at the pulley", "Bearing numbers: record at first opening", "Grease: G = 0.005 × D × B g (TC-07)"] },
     pulleys: { n: "V-belt pulleys", f: "Transmit drive from the motor to the impeller at reduced speed.", s: ["4-groove; motor PCD ≈125, impeller PCD ≈236", "Ratio ≈1.89", "Align within 0.5° / 1 mm per 100 mm (TC-06)"] },
@@ -1270,16 +1290,15 @@ function __startPacker() {
     motor: { n: "Drive motor", f: "Drives the impeller through the belts.", s: ["Innomotics 1LE1 IE3, frame 132, ≈5.5 kW (confirm nameplate)", "400 V Δ, DOL start, bearings 6208-2ZC3", "Protected by Schneider GV2-P16 (9–14 A)"] },
     motorbase: { n: "Motor plate and jack bolt", f: "Carries the motor on top of the chute body; the jack bolt sets belt tension.", s: ["Hinged plate", "Jack bolt with lock nuts", "Re-tension new belts after 4–8 h running"] },
     guard: { n: "Belt guard", f: "Prevents access to the belts and pulleys while running.", s: ["Fabricated sheet steel, bolted", "Must be fitted before isolation is removed"] },
-    gate: { n: "Flow gate", f: "Controls how fast limestone passes from the housing to the spout.", s: ["Sliding gate plate between housing and spout", "Positions: closed / partly open (fine) / fully open (coarse)"] },
+    gate: { n: "Flow gate", f: "A slide plate moves across the outlet channel between the housing and the spout, controlling how fast limestone flows.", s: ["Channel ≈90 × 90 mm; plate pulled sideways by the actuator", "Positions: closed / partly open (fine) / fully open (coarse)"] },
     spout: { n: "Filling spout", f: "Delivers limestone into the valve bag hung on it.", s: ["Tube Ø≈60, ≈400 mm long, conical tip", "Discharge slot ≈150 × 20 on the underside", "4 × M10 flange, 49 N·m; replace when wall < 2 mm"] },
-    actuator: { n: "3-position gate actuator", f: "Moves the flow gate: fully open for coarse fill, partly open for fine, closed.", s: ["Tandem tie-rod cylinder, bore ≈50 + rear stage ≈40", "Rear stop screw sets the fine opening (TC-14)", "Adjust only with air vented"] },
+    actuator: { n: "3-position gate actuator", f: "Tandem cylinder on the side of the gate body: its rod pulls the slide plate across the channel. Closed, partly open for fine fill (rear stage against the stop screw), fully open for coarse fill.", s: ["Tandem tie-rod cylinder: front stage bore ≈50, rear stage ≈40", "Rear stop screw sets the fine opening (TC-14)", "Adjust only with air vented"] },
     hook: { n: "Hook bracket", f: "Carries the bag clamp above the spout.", s: ["Fabricated flat bar with rounded elbow", "Bolted to the housing"] },
     clamp: { n: "Bag clamp (buffer)", f: "Comes down to clamp the bag valve on the spout during filling and lifts when the bag is full.", s: ["Conical NBR rubber buffer on M10 plunger with lock nut", "Drive / trigger: TBC", "Set so the valve is held firmly without crushing (TC-13)"] },
     lcs: { n: "Local control station", f: "Operator controls for this spout.", s: ["MAN/AUTO selector (AUTO = timed coarse fill)", "Green START = fine fill, red STOP", "White lamp; Kent IP65 enclosure"] },
     hoses: { n: "Air hoses", f: "Carry compressed air to the valves, actuator and aeration points.", s: ["Blue PU main air; clear PVC aeration", "Replace hoses that are hard or cracked (TC-17)"] },
     scale: { n: "EMTOP EESE230001 platform scale", f: "Weighs the bag while it fills; the operator stops the fine fill at 50 kg.", s: ["Capacity 300 kg, division 50 g", "ZERO each shift; test weight within ±0.10 kg", "Stands on the packer platform under the spout"] },
     bag: { n: "Valve bag", f: "50 kg limestone bag, hung by the valve in its top corner.", s: ["Kraft paper valve bag", "Coarse ≈40 kg, fine top-up to 50.00 kg"] },
-    rag: { n: "Dust rag", f: "Wrapped round the spout at the bag valve to catch dust.", s: ["Replace when saturated"] },
     pallet: { n: "Pallet", f: "Filled bags are stacked here for dispatch.", s: ["Timber pallet, 10 bags per stack in this model"] },
     panel: { n: "Main control panel", f: "Houses the PLC, motor starters and power supplies for both spouts.", s: ["FLS-badged enclosure mounted on the centre tube", "Incoming 400 V 3~ (TBC); door key switch, lamps, safety lock", "Drawings PK-EL-001 … 007"] },
     door: { n: "Panel door", f: "Carries the operator devices; opens for maintenance under LOTOTO.", s: ["Open only when -QS0 is locked off, or by an authorised electrician"] },
@@ -1582,7 +1601,9 @@ function __startPacker() {
       u.bag.rotation.y = -0.14 * (1 - fe);                                      // empty bag hangs crooked from its corner, straightens when full
       u.bag.position.z = -u.bagH / 2 * (0.9 + 0.1 * fe);
       // gate & actuator
-      const gate = ph.gate; u.gatePlate.position.y = -110 * gate; const rl = 30 + 70 * (1 - gate); u.rod.scale.y = rl; u.clevis.position.y = -50 + rl;
+      const gate = ph.gate; u._g = (u._g === undefined ? gate : u._g + (gate - u._g) * Math.min(1, dt * 6));   // smooth stroke
+      const shift = -45 - 90 * u._g;                          // closed -45, fine (30 %) -72, full -135
+      u.gatePlate.position.y = shift; u.rod.scale.y = Math.max(1, (shift - 96) - (-265 + 13));
       u.selector.rotation.y += ((k === 1 ? -0.9 : 0.5) - u.selector.rotation.y) * Math.min(1, dt * 8);
       u.leds.forEach((l, j) => { const on = j === 0 ? ph.y[0] : j === 1 ? ph.y[1] : j === 4 ? ph.y[2] : 0; l.material.emissive.copy(on ? ledOn : ledOff); l.material.emissiveIntensity = on ? 2.2 : 1; l.material.color.copy(on ? ledOn : ledOff);
         if (!l.userData.glow) { const gs = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: 0xffb020, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); gs.scale.set(70, 70, 1); l.add(gs); l.userData.glow = gs; }
